@@ -5,17 +5,42 @@ import eye from "../../assets/eye.svg";
 import ChatMessages from "../misc/ScrollableChat";
 import axios from "axios";
 import ScrollableChat from "../misc/ScrollableChat";
+import io from "socket.io-client";
+
+const ENDPOINT = "http://localhost:4000";
+
+let socket, selectedChatCompare;
 
 export default function ChatBox() {
   const [newMessage, setnewMessage] = useState("");
   const [messages, setMessages] = useState([]);
 
   let selectedChat = useSelector((state) => state.selectedChat);
-  let token = localStorage.getItem('token')
-  let user = useSelector((state)=>state.user);
+  let token = localStorage.getItem("token");
+  let user = useSelector((state) => state.user);
+
+  useEffect(() => {
+    socket = io(ENDPOINT);
+    socket.emit("setup", user);
+
+    socket.on("connected", () => {});
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
+    socket.on("message recieved", (message) => {
+      if (selectedChat && message.chat._id == selectedChat._id)
+        setMessages([...messages, message]);
+
+    });
+  });
 
   const fetchMessages = async () => {
     if (!selectedChat) return;
+    socket.emit("join room", selectedChat);
 
     const url = `http://localhost:4000/message/${selectedChat._id}`;
 
@@ -24,8 +49,6 @@ export default function ChatBox() {
         Authorization: "Bearer " + token,
       },
     });
-
-    console.log(response.data);
 
     setMessages(response.data);
   };
@@ -38,33 +61,34 @@ export default function ChatBox() {
     if (e.key !== "Enter") return;
 
     const url = `http://localhost:4000/message/`;
-    const payload= {
+    const payload = {
       chatId: selectedChat._id,
-      content: newMessage
-    }
+      content: newMessage,
+    };
 
     try {
-      axios.post(url,JSON.stringify(payload), {
-        headers: {
-          Authorization: "Bearer " + token,
-          'Content-Type': 'application/json'
-        },
-      }).then((response)=>{
-        console.log(response.data);
-        setMessages([...messages,response.data]);
-      })
-  
-  
+      axios
+        .post(url, JSON.stringify(payload), {
+          headers: {
+            Authorization: "Bearer " + token,
+            "Content-Type": "application/json",
+          },
+        })
+        .then((response) => {
+          socket.emit("new message", response.data);
+          setMessages([...messages, response.data]);
+        });
+
       setnewMessage("");
-      
     } catch (error) {
       console.error("Error sending message:", error);
-
     }
-
   };
 
-  if (!selectedChat) return <div className="grow bg-white rounded m-2"> Please Select a Chat</div>;
+  if (!selectedChat)
+    return (
+      <div className="grow bg-white rounded m-2"> Please Select a Chat</div>
+    );
 
   return (
     <div className="grow bg-white rounded m-2 flex flex-col ">
@@ -74,7 +98,7 @@ export default function ChatBox() {
           <img src={eye} />
         </button>
       </div>
-        <ScrollableChat messages={messages}/>
+      <ScrollableChat messages={messages} />
       <input
         onKeyDown={handleSendMessage}
         placeholder="Enter a message"

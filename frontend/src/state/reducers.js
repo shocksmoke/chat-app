@@ -4,23 +4,23 @@ export const chatSlice = createSlice({
   name: 'chat',
   initialState: {
     selectedChat: null,
-    search: "",
     user: null,
+    chats: []
   },
   reducers: {
     setSelectedChat: (state,action) => {
         state.selectedChat= action.payload.chat;
       },
-    setSearch: (state,action)=>{
-        state.search= action.payload.search;
-    },
     setUser: (state,action)=>{
       state.user= action.payload.user;
+    },
+    setChats: (state,action)=>{
+      state.chats= action.payload.chats;
     }
   }
 })
 
 // Action creators are generated for each case reducer function
-export const { setSearch,setSelectedChat,setUser } = chatSlice.actions
+export const { setSearch,setSelectedChat,setUser,setChats } = chatSlice.actions
 
 export default chatSlice.reducer

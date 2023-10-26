@@ -2,14 +2,13 @@ import React, { useDebugValue, useEffect, useState } from "react";
 import axios from "axios";
 import AddGroupChat from "../components/AddGroupChat";
 import { useDispatch, useSelector } from "react-redux";
-import { setSelectedChat } from "../state/reducers";
+import { setChats, setSelectedChat } from "../state/reducers";
 
 export default function MyChats() {
-  const [chatList, setChatList] = useState([]);
   let token = localStorage.getItem("token");
   let user = useSelector((state)=>state.user);
+  let chats= useSelector((state)=>state.chats);
   let dispatch= useDispatch();
-  let selectedChat= useSelector((state)=>state.selectedChat);
   
 
   const fetchDetails = async () => {
@@ -21,12 +20,12 @@ export default function MyChats() {
       },
     });
 
-    setChatList(response.data);
+    dispatch(setChats({chats: response.data}));
   };
 
   useEffect(() => {
     fetchDetails();
-  }, [selectedChat]);
+  }, []);
 
   const createChat = (chat) => {
     let name="";
@@ -36,7 +35,7 @@ export default function MyChats() {
     else name= chat.chatName;
 
     return (
-      <div className="bg-white rounded m-2 h-80" key={chat._id} onClick={()=>{
+      <div className="bg-white rounded m-2" key={chat._id} onClick={()=>{
         dispatch(setSelectedChat({chat: chat}));
       }}>
         <h1>{name}</h1>
@@ -56,7 +55,7 @@ export default function MyChats() {
        <AddGroupChat/>
       </div>
       <div className="bg-slate-300 grow h-[10vh] overflow-scroll">
-        {chatList.map(createChat)}
+        {chats.map(createChat)}
       </div>
     </div>
   );

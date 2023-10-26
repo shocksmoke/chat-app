@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import User from "./User";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
-import { setSelectedChat } from "../state/reducers";
+import { setChats, setSelectedChat } from "../state/reducers";
 
 export default function AddGroupChat() {
   const [groupName, setgroupName] = useState("");
@@ -10,7 +10,9 @@ export default function AddGroupChat() {
   const [searchUsers, setSearchUsers] = useState([]);
   const [search, setSearch] = useState("");
   const [showModal, setShowModal]= useState(false);
+
   let token = localStorage.getItem("token");
+  let chats= useSelector(state=>state.chats);
   let dispatch= useDispatch();
 
   let currUser = useSelector((state)=>state.user);
@@ -24,7 +26,7 @@ export default function AddGroupChat() {
       },
     });
 
-    let foundUsers = response.data.users;
+    let foundUsers = response.data;
 
     foundUsers = foundUsers.filter((user) => {
         // Check if the user is not the current user and is not included in the users array
@@ -56,11 +58,10 @@ export default function AddGroupChat() {
 
     
     dispatch(setSelectedChat({chat: response.data}));
+    dispatch(setChats({chats: [response.data,...chats]}));
     setShowModal(false);
     setgroupName("");
     setUsers([]);
-
-
   }
 
   return (

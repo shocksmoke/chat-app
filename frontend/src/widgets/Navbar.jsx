@@ -2,11 +2,25 @@ import React, { useDebugValue, useState } from "react";
 import notifications from "../../assets/notifications.svg";
 import UserList from "../components/UserList";
 import { useDispatch, useSelector } from "react-redux";
-import { setSearch } from "../state/reducers";
+import { setChats, setSelectedChat, setUser } from "../state/reducers";
+import { useNavigate } from "react-router-dom";
 
 export default function Navbar() {
-  let search= useSelector(state=>state.search);
+  const [search, setSearch] = useState("");
+  let user= useSelector(state=>state.user);
   let dispatch= useDispatch();
+  let navigate= useNavigate();
+
+  const updateSearch= (newSearch)=>{
+    setSearch(newSearch);
+  }
+
+  const handleSignOut=()=>{
+    dispatch(setUser({user: null}))
+    dispatch(setChats({chats: []}))
+    dispatch(setSelectedChat({chat: null}))
+    navigate('/');
+  }
 
   return (
     <nav className="bg-white flex border-gray-200 justify-between m-2">
@@ -37,13 +51,16 @@ export default function Navbar() {
               placeholder="Search User"
               value={search}
               onChange={(e) => {
-                dispatch(setSearch({search: e.target.value}))
+                setSearch(e.target.value);
               }}
             />
           </div>
         </form>
             
-        <UserList/>
+        <UserList
+          keyword={search}
+          setKeyword={updateSearch}
+        />
         
       </div>
 
@@ -62,7 +79,7 @@ export default function Navbar() {
             className="text-white p-3 m-2 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm text-center inline-flex items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
             type="button"
           >
-            Dropdown button{" "}
+            {user.name}
             <svg
               className="w-2.5 h-2.5 ml-2.5"
               aria-hidden="true"
@@ -89,7 +106,7 @@ export default function Navbar() {
               aria-labelledby="dropdownDefaultButton"
             >
               <li>
-                <a href="#" className="block  py-2 hover:bg-gray-100">
+                <a onClick={handleSignOut} className="block  py-2 hover:bg-gray-100">
                   Sign out
                 </a>
               </li>
